@@ -1,0 +1,238 @@
+---
+title: "Iris_Data_Analytics_Project"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+Data: Iris dataset 
+
+The data set contains 3 classes of 50 instances each, where each class refers to a type of iris plant. One class is linearly separable from the other 2; the latter are NOT linearly separable from each other. 
+
+
+## 1.	Discuss the business problem/goal
+
+Data Science Project Idea: Implement a machine learning classification or regression model on the dataset. Classification is the task of separating items into its corresponding class. 
+
+I will use different classifiers:
+
+- Decision tree
+In the package called tree, function tree can be used to build a decision tree. I will use the iris data to build the decision tree and plot it.
+
+- Naïve Bayes
+In the package called e1071, function naiveBayes can be used to build a naïve Bayes model. I will use the iris data to build a naïve Bayes model and print out the results.
+
+- Support vector machine
+In the package called e1071, function svm can be used to build a support vector machine. Notice that some parameters need to be specified first.I will use the iris data to build a support vector machine. 
+
+## 2. identify where the dataset was retrieved from
+
+Data Link: Iris dataset <https://archive.ics.uci.edu/ml/datasets/Iris> 
+
+Attribute Information:
+
+1. sepal length in cm 
+2. sepal width in cm 
+3. petal length in cm 
+4. petal width in cm 
+5. class: 
+-- Iris Setosa 
+-- Iris Versicolour 
+-- Iris Virginica
+
+## 3.	identify the code that imported and saved your dataset in R 
+
+
+
+```{r}
+#############  Different Classifiers #############
+#install.packages("tree")
+#install.packages("caret")
+
+setwd("~/Documents/Projects/R/Iris_ML")
+iris_raw <- read.csv("iris.data", header=FALSE)
+iris<-iris_raw
+
+#set variables' name
+names(iris) <-c('Sepal.Length','Sepal.Width','Petal.Length','Petal.Width','Species')
+
+# In iris data, Species is the class label
+iris$Species<-as.factor(iris$Species)
+
+```
+
+## 4.	describe your data set (using the common attributes such as #rows, #columns, variable names, types, means, SD, min/max, NAs, etc...) 
+
+```{r}
+
+head(iris)
+
+#rows 
+nrow(iris)
+
+#columns
+ncol(iris)
+
+#variable names
+names(iris)
+
+#types
+for (i in 1:ncol(iris)){
+  print(class(iris[[i]]))
+}
+
+#means, min/max, NAs, etc...
+str(iris)
+summary(iris)
+
+#sd
+for (i in 1:(ncol(iris)-1)){
+  cat("The standard deviation of iris column ")
+  cat(names(iris)[i]) 
+  cat(" is: ")
+  cat(sd(iris[[i]]),'\n')
+}
+```
+
+## 5.	discuss any data preparation, missing values and errors (if the dataset was clean and there is no prep in the code, include a comment that explains what likely data preparation was done. What are the common issues with raw data?)
+
+Raw Iris Dataset does not have any information as what the data is, or what is it representing:
+
+5.1,3.5,1.4,0.2,Iris-setosa
+
+4.9,3.0,1.4,0.2,Iris-setosa
+
+4.7,3.2,1.3,0.2,Iris-setosa
+
+4.6,3.1,1.5,0.2,Iris-setosa
+
+5.0,3.6,1.4,0.2,Iris-setosa
+
+5.4,3.9,1.7,0.4,Iris-setosa
+
+We add the name for each column and convert the type of the last column to the factor. Now it contains valuable processed information like column names. The process is explained later below.
+```{r}
+#set variables' name
+names(iris) <-c('Sepal.Length','Sepal.Width','Petal.Length','Petal.Width','Species')
+
+# In iris data, Species is the class label
+iris$Species<-as.factor(iris$Species)
+
+```
+
+```{r}
+# I will test the condition by column:
+apply(iris, 2, function(x) any(is.na(x)))
+
+# So, I did not read missing values.
+#Data preparation was done.
+```
+
+## 6.	discuss the modeling 
+
+The data set contains 3 classes of 50 instances each,
+where each class refers to a type of iris plant.  One class is
+linearly separable from the other 2; the latter are NOT linearly
+separable from each other.
+
+Predicted attribute: class of iris plant.
+I will use sepal length, sepal width, petal length and petal width to predict the species of Flower.
+
+If data is quantitative that is continuous, we consider a regression. But we are dealing with species which is char type. So we consider a classification.
+
+We will use different classifiers:
+
+- Decision tree
+
+- Naïve Bayes
+
+- Support vector machine (with different parameters)
+
+## 7.	produce and discuss the output 
+## 8.	provide explanation with any visuals 
+
+```{r}
+set.seed(5)
+iris.train <- c(sample(1:150, 75)) # randomly select 75 examples as training data
+
+## Decision Tree
+# install package "tree" first
+library(tree)
+tree.iris <- tree(Species ~ ., iris, subset=iris.train)
+plot(tree.iris)
+text(tree.iris)
+prediction <- predict(tree.iris, iris[-iris.train, ], type="class")
+res <- table(prediction, iris[-iris.train, "Species"]) ## this res returns the
+res
+
+## Naive Bayes
+# install package "e1071" first
+library(e1071)
+iris.nb <- naiveBayes(Species ~ ., data=iris, subset=iris.train)
+prediction <- predict(iris.nb, iris[-iris.train, ], type="class")
+res <- table(prediction, iris[-iris.train, "Species"]) ## this res returns the confusion matrix
+res
+
+## Calculate the accuracy, precision and recall for each class from the Naive Bayes model
+library(caret)
+confusionMatrix(res)
+
+# Accuracy for the Naive Bayes model:
+accuracy <- sum(diag(res))/sum(res); accuracy  
+
+recall.setosa <-  res[1,1]/(res[1,1]+res[2,1]+res[3,1]); recall.setosa 
+precision.setosa <- res[1,1]/(res[1,1]+res[1,2]+res[1,3]);precision.setosa 
+recall.versicolor <-  res[2,2]/(res[1,2]+res[2,2]+res[3,2]); recall.versicolor 
+precision.versicolor <- res[2,2]/(res[2,1]+res[2,2]+res[2,3]);precision.versicolor 
+recall.virginica <- res[3,3]/(res[1,3]+res[2,3]+res[3,3]); recall.virginica 
+precision.virginica <- res[3,3]/(res[3,1]+res[3,2]+res[3,3]);precision.virginica 
+
+
+## Support Vector Machine
+# svm is also in the package "e1071"
+
+# I will use Petal.Width and Petal.Length as parameters for svm model
+iris.svm <- svm(Species ~ ., data=iris,  kernel="radial", cost=1)
+plot(iris.svm, iris, Petal.Width ~ Petal.Length, slice = list(Sepal.Width = 3, Sepal.Length = 4))
+
+#I can see data, support vector(represented by cross sign) and decision boundary, belong to 3 types of species
+
+# First of all I try to use linear kernel instead and plot the result
+iris.svm <- svm(Species ~ ., data=iris, kernel="linear", cost=1)
+plot(iris.svm, iris, Petal.Width ~ Petal.Length, slice = list(Sepal.Width = 3, Sepal.Length = 4))
+
+
+# Now I try to use cost of 100 with radial kernel and plot the result
+iris.svm <- svm(Species ~ ., data=iris,  kernel="radial", cost=100)
+plot(iris.svm, iris, Petal.Width ~ Petal.Length, slice = list(Sepal.Width = 3, Sepal.Length = 4))
+
+
+#And now I try to use cost of 0.001 with radial kernel and plot the result
+iris.svm <- svm(Species ~ ., data=iris,  kernel="radial", cost=0.001)
+plot(iris.svm, iris, Petal.Width ~ Petal.Length, slice = list(Sepal.Width = 3, Sepal.Length = 4))
+
+
+# At least I use the tune function to find the combination of kernel and cost which gives the lowest cross-validation error rate
+tune.out <- tune(svm, Species~., data=iris, ranges=list(cost=c(0.001, 0.01, 0.05, 1, 10, 100, 1000), kernel=c("linear", "radial")))
+summary(tune.out)
+
+# So, I select the best kernel and cost to build the svm again and plot the result
+iris.svm <- svm(Species ~ ., data=iris,  kernel="linear", cost=100)
+plot(iris.svm, iris, Petal.Width ~ Petal.Length, slice = list(Sepal.Width = 3, Sepal.Length = 4))
+
+pred = predict(iris.svm,iris)
+res = table(Predicted=pred, Actual = iris$Species)## this res returns the confusion matrix
+res
+
+# So, only 3 data points from 150 belong to wrong category. I can see a good svm-model
+
+```
+
+
+
